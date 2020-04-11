@@ -21,14 +21,14 @@ Para los ejercicios a continuación es necesario que tengan descargados los sigu
 ```{r cargando paquetes, echo = FALSE}
 library(data.table)    ## Este debiese de tenerlo instalado desde la ayudantía 01
 library(ggplot2)       ## Este debiese de tenerlo instalado desde la clase 02
-library(highcharter)
+library(highcharter) # 
 library(scales)
 ```
 
 A continuación, utilizaremos una base de datos recopilada de la Nueva Encuesta Nacional de Empleo (NENE), perteneciente al Instituto Nacional de Estadística (INE) y trabajada por el Centro de Economía y Políticas Públicas de la Universidad Adolfo Ibañez (CEPR). 
 
 ```{r cargando base de datos}
-Tabla_19_19 <- data.table(readRDS("Tabla_19_19.rds"))
+Tabla_19_19 <- data.table(readRDS("Tabla_19_19.rds")) # tipo rds, no tipo excel
 ```
 
 Los datos incluyen información sobre la categoría ocupacional de la población, el sector industrial donde trabajan, si son trabajadores formales o informales, nivel educacional, tramo de edad, entre otras cosas varias. Para más información sobre el contenido de dichas bases de dato se recomienda visitar la página del INE (<https://ine.cl/estadisticas/sociales/mercado-laboral/ocupacion-y-desocupacion>).
@@ -88,7 +88,7 @@ Supongamos que ahora se desea ver la evolución de ocupados por genero a lo larg
 ggplot(data = Tabla_19_19[cae_general_red == "Ocupados",], aes(x = mes_central, y = V1, fill = sexo)) + 
   geom_bar(stat="identity") +
   scale_y_continuous(labels = number_format(scale = 0.000001, suffix = "M", big.mark = ".", decimal.mark = ",")) + 
-  labs(x = "Categoría Ocupacional", y = "N° de Personas", fill = NULL)
+  labs(x = "Categoría Ocupacional", y = "N° de Personas", fill = NULL) # esta malo, ya que empieza con el mes 1 pero de 2020, y luego con los otros de 2019. Además, se ve la cantidad de hombres y mujeres ocupados, pero quiero ver la variación de estos.
 ```
 
 Notaremos que existen tres grandes problemas con este gráfico:
@@ -103,20 +103,20 @@ Por lo tanto, pudiese ser mejor mejor quedarnoso solo con las variaciones de per
 
 ```{r rezago}
 var_sexo <- Tabla_19_19[cae_general_red == "Ocupados", sum(V1), by = .(ano_trimestre,mes_central,sexo)]
-var_sexo[,sexo_anterior := shift(V1, n = 1, type = 'lag'), by = .(sexo)]
+var_sexo[,sexo_anterior := shift(V1, n = 1, type = 'lag'), by = .(sexo)] # quiero ver las variaciones de un mes a otro. Para llevar los datos n=1 periodos al futuro, y ver la diferencia entre ese y el original.
 ```
 
 Crearemos una evolución absoluta y otra porcentual (con respecto al trimestre anterior) de los ocupados por género, aunque observaremos que el resultado gráfico es el mismo:
 
 ```{r variacion}
-var_sexo[,sexo_absoluto := round(V1 - sexo_anterior)]
-var_sexo[,sexo_porcentual := round((V1 - sexo_anterior)/sexo_anterior,4)*100]
+var_sexo[,sexo_absoluto := round(V1 - sexo_anterior)] # hago la resta para ver cuánto varió de un mes a otro
+var_sexo[,sexo_porcentual := round((V1 - sexo_anterior)/sexo_anterior,4)*100] # variación porcentual
 ```
 
 Para el problema del orden de los trimestres, asignamos etiquetas y ordenamos según dichas etiquetas:
 
 ```{r agregando etiquetas 2}
-var_sexo$mes_nombre <- factor(var_sexo$mes_central, levels = c(2:12,1), labels = c("FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEP","OCT","NOV","DIC","ENE"))
+var_sexo$mes_nombre <- factor(var_sexo$mes_central, levels = c(2:12,1), labels = c("FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEP","OCT","NOV","DIC","ENE")) # queremos arreglar para que no aparezca primero enero de 2020 y luego febrero 2019, asi que lo ordenamos por mes.
 ```
 
 Ahora volvemos a graficar la variación absoluta por genero:
@@ -125,7 +125,7 @@ Ahora volvemos a graficar la variación absoluta por genero:
 ggplot(data = var_sexo, aes(x = mes_nombre, y = sexo_absoluto, group = sexo, color = sexo)) + 
   geom_line(position = position_identity()) +
   scale_y_continuous(labels = number_format(scale = 0.001, suffix = "K", big.mark = ".", decimal.mark = ",")) + 
-  labs(x = "Categoría Ocupacional", y = "N° de Personas", fill = NULL)
+  labs(x = "Categoría Ocupacional", y = "N° de Personas", fill = NULL) # se quitan 2 filas, ya que febrero 2019 no cuenta con datos de meses pasados
 ```
 
 En terminos porcentuales:
@@ -134,13 +134,13 @@ En terminos porcentuales:
 ggplot(data = var_sexo, aes(x = mes_nombre, y = sexo_porcentual, group = sexo, color = sexo)) + 
   geom_line(position = position_identity()) +
   scale_y_continuous(labels = number_format(scale = 1, suffix = "%", big.mark = ".", decimal.mark = ",")) + 
-  labs(x = "Categoría Ocupacional", y = "N° de Personas", fill = NULL)
+  labs(x = "Categoría Ocupacional", y = "N° de Personas", fill = NULL) # no hay diferencia entre este (variación %) y el anterior (variación absoluta)
 ```
 
 Notaremos que no está indicado el mes en pasamos de 2019 a 2020, así como que no sos sobra el mes de febrero (que no posee datos por el lag generado). Por lo tanto arreglamos esos problemas:
 
 ```{r grafico de lineas 3}
-var_sexo[, fecha := ifelse(mes_central > 9, var_sexo$mes_central, paste0("0",var_sexo$mes_central))]
+var_sexo[, fecha := ifelse(mes_central > 9, var_sexo$mes_central, paste0("0",var_sexo$mes_central))] # quiero que todos los valores menores a 10 tengan un 0 antes (01,02,03,04,05,06,07,08,09) para que se pueda leer bien como date
 var_sexo[,fecha := as.Date(paste0(ano_trimestre,fecha,"01"),format = "%Y%m%d")]
 var_sexo <- var_sexo[c(-1,-2)]
 ```
@@ -149,14 +149,14 @@ Si incluimos una linea horizontal, denominando el 0% como la separación entre c
 
 ```{r grafico de lineas 4}
 ggplot(data = var_sexo, aes(x = fecha, y = sexo_absoluto, group = sexo, color = sexo)) + 
-  geom_hline(yintercept = 0) + 
-  geom_line(position = position_identity()) + 
-  geom_point(position = position_identity()) +
-  geom_text(aes(x = unique(var_sexo$fecha)[9], y = 0, label = "aumento\n disminución"), colour="gray60") +
-  geom_text(aes(label = sexo_absoluto), color = "black", nudge_y = 2500, size = 3) + 
-  scale_y_continuous(labels = number_format(scale = 0.001, suffix = "K", big.mark = ".", decimal.mark = ",")) + 
-  scale_x_date(date_labels = "%Y-%b", breaks = unique(var_sexo$fecha)[c(seq(1,12,2))]) +
-  labs(x = "Categoría Ocupacional", y = "Variación de Personas", fill = NULL)
+  geom_hline(yintercept = 0) + # pone 0 en la mitad 
+  geom_line(position = position_identity()) + # agrega lineas
+  geom_point(position = position_identity()) + # agrega puntos
+  geom_text(aes(x = unique(var_sexo$fecha)[9], y = 0, label = "aumento\n disminución"), colour="gray60") + # agrega un texto en una ubicación en específico 
+  geom_text(aes(label = sexo_absoluto), color = "black", nudge_y = 2500, size = 3) + # agrega un texto en una ubicación en específico 
+  scale_y_continuous(labels = number_format(scale = 0.001, suffix = "K", big.mark = ".", decimal.mark = ",")) + # cambia formato de valores del eje y
+  scale_x_date(date_labels = "%Y-%b", breaks = unique(var_sexo$fecha)[c(seq(1,12,2))]) + # cambia formato de valores del eje x
+  labs(x = "Categoría Ocupacional", y = "Variación de Personas", color = NULL) # renombrar los nombres de los ejes x e y, y color = NULL lo anotamos para borrar la etiqueta "sexo"
 ```
 
 Como dato extra, se puede indicar que las capacidades de edición del gráfico de ggplot2 son bastantes detalladas. Por ejemplo, se pueden agregar temas para estilizar el diseño final del gráfico. Volviendo al primer gráfico de barras, supongamos que deseamos hacer una presentación formal sobre los resultados. Un poco más de trabajo y pueden llegar a tener gráficos muy decentes:
@@ -184,7 +184,7 @@ ggplot(data = Tabla_19_19[mes_central == params$month,round(sum(V1)),by = c("sex
   scale_y_continuous(labels = number_format(scale = 0.000001, suffix = "M", big.mark = ".", decimal.mark = ",")) + 
   labs(title = "CATEOGRÍAS OCUPACIONALES POR SEXO",subtitle = "Enero de 2020", x = NULL, y = NULL, fill = NULL, caption = "Obtenido de Nueva Encuesta Nacional de Empleo - INE") + 
   facet_grid(~sexo,scales = 'free_x',as.table = T) +
-  theme_linedraw()
+  theme_linedraw() 
 ```
 
 También podemos diseñar nosotros nuetro tema desde 0 (en caso de que no nos gusten los temas disponibles). Eso se hace con las siguientes funciones (solo un ejemplo):
@@ -229,7 +229,7 @@ ggplot(data = Tabla_19_19[mes_central == params$month,round(sum(V1)),by = c("sex
 Al igual que plotly (visto en clase 04), highcharter es un paquete que permite generar gráficos dinámicos de distinto tipo. Para más información sobre el paquete y sus capacidades, se recomienda visitar su página web: <http://jkunst.com/highcharter/index.html>. Por ejemplo, intentémor replicar el gráfico de lineas trabajado en ggplo2 anteriormente para describir la evolución de ocupados por sexo:
 
 ``` {r hc line 1}
-hchart(var_sexo, "line", hcaes(x = fecha, y = sexo_absoluto, group = sexo, color = sexo))
+hchart(var_sexo, "line", hcaes(x = fecha, y = sexo_absoluto, group = sexo, color = sexo)) # paquete highcharter (gráfico interactivo). A diferencia de ggplot, todo se agrega en un solo comando.
 ```
 
 Si quisieramos generar un gráfico de lineas separado para cada uno de los de los sexos (equivalente a la función face_wrap de ggplot2), debemos trabajar un poco la base:
@@ -238,7 +238,7 @@ Si quisieramos generar un gráfico de lineas separado para cada uno de los de lo
 var_sexo_h <- var_sexo[sexo == "Hombres", .(fecha, Hombres = sexo_absoluto)]
 var_sexo_m <- var_sexo[sexo == "Mujeres", .(fecha, Mujeres = sexo_absoluto)]
 var_sexo_2 <- merge(var_sexo_h,var_sexo_m, by = "fecha", all = T)
-var_sexo_2 <- ts(var_sexo_2[, .(Hombres,Mujeres)],start = c(2019,3), end =c(2020,1),frequency = 12)
+var_sexo_2 <- ts(var_sexo_2[, .(Hombres,Mujeres)],start = c(2019,3), end =c(2020,1),frequency = 12) # de datatable lo pasamos a timeseries. Nos quedamos con hombres y mujeres, comenzando con el mes 3 de 2019 y terminando con enero de 2020. Frecuencia = 12 quiere decir que quiero dividir todo en 12 meses.
 ```
 
 Notaremos que si llamamos algunas de las variables de sexo (var_sexo_2[,"Hombres"]), notaremos que la consola lo observa como una matriz. El objeto ya no es clase "data.table", sino que ahora es clase "ts" y "matrix".
@@ -289,13 +289,12 @@ purrr::map(c("Hombres","Mujeres"), function(z){
 
 # Opción 2
 highchart() %>%
-  hc_xAxis(categories = c("Hombres", "Mujeres")) %>%
-  hc_add_series(name = "Cesantes", data = col_sexo_2$Cesantes, type = "column") %>%
-  hc_add_series(name = "Inactivos", data = col_sexo_2$Inactivos, type = "column") %>%
-  hc_add_series(name = "Ocupados", data = col_sexo_2$Ocupados, type = "column") %>%
-  hc_title(text = paste("Categoría laboral")) %>%
-  hc_yAxis(title = "none")
-
+  hc_xAxis(categories = c("Hombres", "Mujeres")) %>% # separar categorías entre hombres y mujeres
+  hc_add_series(name = "Cesantes", data = col_sexo_2$Cesantes, type = "column") %>% # agregar cesantes 
+  hc_add_series(name = "Inactivos", data = col_sexo_2$Inactivos, type = "column") %>% # agregar inactivos
+  hc_add_series(name = "Ocupados", data = col_sexo_2$Ocupados, type = "column") %>% # agrgar ocupados
+  hc_title(text = paste("Categoría laboral")) %>% # agregar título
+  hc_yAxis(title = "none") # y sin titulo
 ```
 
 Notar que para la opción n°1 fue necesario utilizar dos paquetes extra (purrr, el cual también pertenece al mundo de paquetes de Tidyverse, y htmltools). Por un lado, la función map (de purrr) permite reemplazar muchos loops por códigos que sea más fáciles de leer, mientras que browsable (de htmltools) puede usarse para hacer que objetos específicos se procesen como HTML de forma predeterminada cuando se imprimen en la consola.

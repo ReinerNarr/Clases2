@@ -22,7 +22,7 @@ Estaremos ocupando las bases de datos de los casos de COVID-19 a nivel mundial, 
 Recordar que la opción `stringsAsFactors = F` le dice a data.table que al crear el objeto, no convierta las variables en formato string (characters) en factores (variables con etiqueta). Esto permite que sea el usuario quien determine si es necesario (y la forma) que la variable sea convertida a factor o no.
 
 ```{r cargando bases}
-casos <- data.table(read_excel("COVID_19_up_to_29_02_2020_cases.xlsx"),stringsAsFactors = F)
+casos <- data.table(read_excel("COVID_19_up_to_29_02_2020_cases.xlsx"),stringsAsFactors = F) # stringsAsFactors es por si tenemos alguna variable categorizada, no queremos que se le asigne un valor numérico a esa columna
 muertes <- data.table(read_excel("COVID_19_up_to_29_02_2020_deaths.xlsx"),stringsAsFactors = F)
 mas_dias <- data.table(read_excel("COVID_19_from_01_03_2020_to_29_03_2020_all.xlsx"),stringsAsFactors = F)
 ```
@@ -32,7 +32,7 @@ Es bueno tener en cuenta, en primera instancia, con la clase de datos que vamos 
 
 ```{r str vs. sapply}
 str(casos)
-sapply(casos, FUN = class)
+sapply(casos, FUN = class) # tengo la base de datos casos y quiero saber la clase de cada columna
 sapply(muertes, FUN = class)
 sapply(mas_dias, FUN = class)
 ```
@@ -40,8 +40,8 @@ sapply(mas_dias, FUN = class)
 Observamos que `str` entrega más datos sobre los data.table, pero es menos cómodo de ver que `sapply`. Observamos que la columna `dateRep` de los objetos `casos` y `mas_dias`, la cual representa la fecha completa (año,mes,día), es de clase `POSIXct`. 
 
 ```{r as.Date}
-casos$dateRep <- as.Date(casos$dateRep,"GMT")
-mas_dias$dateRep <- as.Date(mas_dias$dateRep,"GMT")
+casos$dateRep <- as.Date(casos$dateRep,"GMT") # transformar la columna dateRep de casos a fecha
+mas_dias$dateRep <- as.Date(mas_dias$dateRep,"GMT") # GMT es la zona horaria por defecto
 ```
 
 Al igual que la función `as.Date`, existen múltiples funciones para transformas columnas o bases de datos de una clase a otra. Las más comunes son `as.numeric` (que transforma a valores numericos, que no necesariamente poseen inicialmente clase numeric), `as.character` (transforma el/los elemento/s de una columna a character) y as.factor, que los transforma a números subyacentes con etiquetas de tipo `character`. Por ejemplo:
@@ -57,13 +57,13 @@ h                   ## Notar que desaparece el "0"
 Veamos ahora las categorías de las variables de `mas_dias` (que después descubriremos que son todas las variables diponibles para las tres bases de datos):
 
 ```{r sapply}
-sapply(mas_dias, FUN = unique)
+sapply(mas_dias, FUN = unique) # trae los valores únicos de cada columnade mas_dias
 ```
 
 > Ejercicio: ¿Cuál es la unidad observacional (la más granular) de cada base de datos?, ¿Cuáles son las variables comunes entre estas bases?
 
 ```{r Ejercicio 1: }
-sapply(list(casos,muertes,mas_dias),FUN = names)
+sapply(list(casos,muertes,mas_dias),FUN = names) 
 ```
 
 ### Funciones cbind, rbind y merge
@@ -71,13 +71,13 @@ Antes de filtrar los datos y corregir errores, sería bueno unificar las bases d
 
 ```{r cbind}
 dim(casos)[1]==dim(muertes)[1] # ver si tienen el mismo número de filas.
-cbind(casos,muertes[,.(deaths)]) # Para que no se repitan las columnas, nos quedamos solo con la columna "deaths" de "muertes".
+cbind(casos,muertes[,.(deaths)]) # cbind pega las columnas de una base de datos al lado de las columnas de la otra. rbind hace lo mismo pero por filas.  Para que no se repitan las columnas, nos quedamos solo con la columna "deaths" de "muertes".
 ```
 
 La función "cbind" une dos bases de datos por columnas. Notar que si una columna es más corta que la otra, los datos faltantes de la columna más corta se llenan con datos repetidos. ¿Pero que ocurre si los datos de `muertes` estan desordenados? Es decir, puede exisitr el problema que los datos de `casos` de la fila 20 no sean los correspondientes con los de `muerte` de la misma fila (no es el mismo país, no es la misma fecha, etc...). En ese caso lo mejor que se puede hacer es un merge entre ambas bases:
 
 ```{r merge}
-casosymuertes <- merge(casos,muertes, by = c("day","month","year","countriesAndTerritories"), all = T,sort=F)
+casosymuertes <- merge(casos,muertes, by = c("day","month","year","countriesAndTerritories"), all = T,sort=F) # merge pega las filas de la base 2 que cumpla con las categorías asignadas de la base 1. Quiero unir las bases de datos de casos y muertes donde calcen todas las variables indicadas. all = T dice que se incluyan todas las filas de ambas bases de datos.
 ```
 
 Aquí lo que indico a R es que me adjunte los datos de las columnas de la segunda base de datos (`muertes`) a la primera (`casos`), de acuerdo a que ambas filas (de ambas bases de datos) cumplan con los mismos elementos estipualdos en el aergumento `by`. Es decir, se unen los casos que tengan los mismos valores en las columnas "day", "month", "year" y "countriesAndTerritories". Ojo que, en caso de tener más de una fila que cumpla con dichas categorías, entonces habran errores en el merge (`R` no tiene instrucciones de a que fila asignar dicho dato repetido). En ese caso sería bueno hacer merge por más condiciones o revisar si la base de datos tiene algún error.
@@ -87,13 +87,13 @@ Por último, es necesario unir la continuación de la base de datos para el mes 
 ```{r View}
 View(mas_dias)
 sapply(mas_dias, FUN = class)
-sapply(casosymuertes, FUN = class)
+sapply(casosymuertes, FUN = class) #tienen las mismas variables y de la misma clase, por lo que no habría que tener problemas para unir
 ```
 
 Por lo tanto podemos unir las dos bases de datos:
 
 ```{r rbind}
-al_29_03_2020 <- rbind(casosymuertes,mas_dias)
+al_29_03_2020 <- rbind(casosymuertes,mas_dias) # se suman las filas de ambas bases de datos
 ```
 
 
@@ -103,11 +103,11 @@ Anteriormente observamos que en la variable "countryterritoryCode" existen valor
 
 ```{r N° NAs}
 # Que filas presentan NAs
-al_29_03_2020[rowSums(is.na(al_29_03_2020))>0,]
+al_29_03_2020[rowSums(is.na(al_29_03_2020))>0,] # me muestra las filas que contienen na
 al_29_03_2020[!complete.cases(al_29_03_2020),]  ## Otro ejemplo
 
 # Cuantas filas con NAs hay
-al_29_03_2020[rowSums(is.na(al_29_03_2020))>0,.N]
+al_29_03_2020[rowSums(is.na(al_29_03_2020))>0,.N] # me cuenta cuantas filas contienen na
 al_29_03_2020[!complete.cases(al_29_03_2020),.N]  ## Otro ejemplo
 ```
 
@@ -116,13 +116,13 @@ al_29_03_2020[!complete.cases(al_29_03_2020),.N]  ## Otro ejemplo
 ```{r % NAs}
 apply(al_29_03_2020, 2, function(col){
   paste0(round(sum(is.na(col))/length(col),5)*100,"%")
-  })
+  }) 
 ```
 
 Como dichos datos no son representatiovs, los eliminaremos (igual no trabajaremos con los datos de los países que estamos eliminando):
 
 ```{r completa}
-al_29_03_2020_completo <- al_29_03_2020[complete.cases(al_29_03_2020),]
+al_29_03_2020_completo <- al_29_03_2020[complete.cases(al_29_03_2020),] 
 ```
 
 Supongamos que, dada la contingencia, solo nos interesa ver nuetro país, Perú, Alemania e Italia. Como no sabemos si Perú está con tilde o no (para el filtrado), buscamos una secuencia que inicie con "Per":
@@ -182,7 +182,7 @@ chileyvecinos_completa <- chileyvecinos_completa[order(year, month, day)] # Otra
 Supongamos que deseamos sacar la suma de todos los muertos y casos por mes y país, así como el probedio de la población. Eso se puede hacer en base a un colapso de la base "chileyvecinos_completa":
 
 ```{r colapsar}
-pormes <- chileyvecinos_completa[, .(cases = sum(cases,na.rm = T),deaths = sum(deaths,na.rm = T), popData2018 = round(mean(popData2018, na.rm = T),0)), by = c("month","countriesAndTerritories")]
+pormes <- chileyvecinos_completa[, .(cases = sum(cases,na.rm = T),deaths = sum(deaths,na.rm = T), popData2018 = round(mean(popData2018, na.rm = T),0)), by = c("month","countriesAndTerritories")] # colapsar es abreviar los datos
 ```
 
 Por último, supongamos que deseamos calcular la tasa de infección de la población y la tasa de mortalidad de la población:

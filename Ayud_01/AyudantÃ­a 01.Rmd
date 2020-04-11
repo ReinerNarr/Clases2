@@ -17,11 +17,13 @@ Por ahora, nos centraremos en las funciones de R y las posibles interacciones en
 ```{r Secuencias}
 seq(1,16)
 seq(1,16,3)
+seq(1,15,3)
 ```
 
 ### Repeticiones:
 ```{r Repeticiones} 
-rep(1,4)
+rep(1,4) # repetir el primer valor (1) las veces que indica el segundo valor (4)
+rep("1",4)
 rep(c(1,5,8,2),4)
 ```
 
@@ -35,15 +37,15 @@ sort(c(1,9,8,4,6,3,6,5,2), decreasing = T)
 ```{r Análisis básico} 
 max(c(1,9,8,4,6,3,6,5,2))
 min(c(1,9,8,4,6,3,6,5,2))
-mean(c(1,9,8,4,6,3,6,5,2))
-median(c(1,9,8,4,6,3,6,5,2))
-quantile(c(1,9,8,4,6,3,6,5,2))
+mean(c(1,9,8,4,6,3,6,5,2)) 
+median(c(1,9,8,4,6,3,6,5,2)) # primero te los ordena y después ve cuál está en la mitad
+quantile(c(1,9,8,4,6,3,6,5,2)) 
 ```
 
 ### Interacción
 ```{r Interacción} 
-mean(rep(min(1,5,2),5))
-sort(rep(seq(1,5,2),5))
+mean(rep(min(1,5,2),5)) 
+sort(rep(seq(1,5,2),5)) 
 ```
 
 <br>
@@ -54,7 +56,7 @@ Al trabajar con bases de datos es necesario saber que existen múltiples funcion
 ```{r paquetes}
 #install.packages("data.table")
 #install.packages("titanic")
-library(data.table)
+library(data.table) # data table es uno de los lenguajes más cómodos, rápidos y eficientes
 library(titanic)
 Titanic <- data.table(titanic_train)  ## Notar que ahí creamos un objeto que se llama Titanic, al cual transformamos en clase data.table
 ```
@@ -66,7 +68,7 @@ Titanic[1,]  ## Arroja información sobre la primera fila
 Titanic[6:14,]  ## Arroja información sobre la fila 6 a 14
 Titanic[,4]  ## Arroja información sobre la cuarta columna
 Titanic[,2:8]  ## Arroja información sobre la columna 2 a 8
-Titanic[,.(Survived,Age)]  ## También se puede con nombres de variables
+Titanic[,.(Survived,Age)]  ## También se puede con nombres de variables. Así melo tira como columnas. 
 ```
 
 Ahora, aprendamos algunas estrategias de filtrado básico:
@@ -94,14 +96,16 @@ class(Titanic)
 class(Titanic[,Name])
 class(Titanic[,Ticket])
 class(Titanic[,Age])
-class(Titanic[,Survived])
+class(Titanic[,Survived]) # no existen muchas diferencias entre integer y numeric (integer se usa más que nada para menores procesamientos como datos binominales)
 class(Titanic[,Embarked])
 ```
 
 ¿Cuantas categorías hay en cada variable de Titanic? ¿Cuales son?
 
 ```{r Categorías}
-unique(Titanic[,Embarked])  ## intentar con función "levels" para el caso de columnas de clase "factor"    
+unique(Titanic[,Embarked])## intentar con función "levels" para el caso de columnas de clase "factor"    
+table(Titanic[,Embarked])
+
 unique(Titanic[,Sex])
 unique(Titanic[,Pclass])
 unique(Titanic[,Survived])
@@ -110,7 +114,7 @@ unique(Titanic[,Survived])
 En este caso son pocas categorías, pero: ¿que ocurriría si necesitamos saber cuantas categorías hay en la columna "Oficio" del censo de 2017? 
 
 ```{r N° Categorías}
-length(unique(Titanic[,Age]))  #Por ejemplo   
+length(unique(Titanic[,Age]))  # cantidad de valores diferentes que hay   
 length(unique(Titanic[,Name]))
 ```
 
