@@ -101,29 +101,39 @@ G<-reshape(E,direction = 'wide',timevar = 'Sexo',v.names = c('AvAge','Casos conf
 
 #Scatter plot
 #Base R 
-plot(G$`Casos confirmados.Femenino`,G$`Casos confirmados.Masculino`)
-text(x =G$`Casos confirmados.Femenino`,y=G$`Casos confirmados.Masculino`, G$`Centro de salud`,cex=0.5)
+plot(x=G$`Casos confirmados.Femenino`,y=G$`Casos confirmados.Masculino`) # grafica datos en eje x e y
+text(x=G$`Casos confirmados.Femenino`,y=G$`Casos confirmados.Masculino`, G$`Centro de salud`,cex=0.5) # le agrega etiquetas a cada dato
 
 #ggplot2
 library(ggplot2)
 
-ggplot(data = E, mapping = aes(x = AvAge, y = `Casos confirmados`)) + geom_point()
+names(E)
+ggplot(data = E,mapping = aes(x = AvAge,y=`Casos confirmados`)) + geom_point() # grafica datos en eje x e y
 
-ggplot(data = G,mapping = aes(x=`Casos confirmados.Femenino`,y=`Casos confirmados.Masculino`))+geom_point()
+names(G)
+ggplot(data = G,mapping = aes(x=`Casos confirmados.Femenino`,y=`Casos confirmados.Masculino`))+
+  geom_point() # grafica datos en eje x e y
 
-p1<-ggplot(G,aes(x=`Casos confirmados.Femenino`,y=`Casos confirmados.Masculino`))+geom_point(aes(size=AvAge.Femenino,colour=AvAge.Masculino))+geom_text(aes(label=`Centro de salud`),size=2,check_overlap = T)
+p1<-ggplot(data = G,aes(x=`Casos confirmados.Femenino`,y=`Casos confirmados.Masculino`))+
+  geom_point(aes(size=AvAge.Femenino,colour=AvAge.Masculino))+ # datos de mujeres cambian de tamaño y los hombres de color
+  geom_text(aes(label=`Centro de salud`),size=2,check_overlap = T) # le agrega etiquetas a cada dato
 
-ggplot(data = E,mapping = aes(x=AvAge,y=`Casos confirmados`))+geom_point()+facet_wrap(~Sexo)+geom_smooth(method = 'lm',se=F) + geom_smooth(method = 'loess',col='red',se=F)
+ggplot(data = E,mapping = aes(x=AvAge,y=`Casos confirmados`))+
+  geom_point()+
+  facet_wrap(~Sexo)+ # separa datos (tipo factor o character)entre hombres y mujeres en dos graficos
+  geom_smooth(method = 'lm',se=F)+ # me muestra una linea recta de tendencia
+  geom_smooth(method = 'loess',col='red',se=F) # me muestra una linea de tendencia que se mueve con los datos
 
 
 #plotly
-library(plotly)
+#install.packages('plotly')
+library(plotly) # graficos mas interactivos
 ggplotly(p1)
 
 #histograms
 
-ggplot(casos,aes(x=Edad))+geom_histogram()
-ggplot(E,aes(x=AvAge))+geom_histogram()
+ggplot(data = casos,mapping = aes(x=Edad))+geom_histogram()
+ggplot(data = E,mapping = aes(x=AvAge))+geom_histogram()
 
 # Kernel Densities
 
@@ -139,6 +149,8 @@ casos<-data.table(read_excel("Class_02/2020-03-17-Casos-confirmados.xlsx",na = "
 ggplot(casos,aes(x=Edad,group=Sexo,fill=Sexo))+geom_histogram()+facet_wrap(~factor(Región))
 
 #como sacamos el "fememino"?
+casos[Sexo=='Fememino',Sexo:='Femenino']
+
 
 
 ggplot(casos,aes(x=Edad,group=Sexo,fill=Sexo))+geom_histogram()
@@ -149,62 +161,70 @@ ggplot(casos,aes(x=Edad,group=Sexo,fill=Sexo))+geom_histogram()
 
 #https://chilecracia.org 
 
-#---- Part 3: Intro to Mapping  (Shapefile)-------------------
-install.packages("chilemapas")
-install.packages("rgdal")
-install.packages("sf")
+#---- Part 3: Intro to Mapping (Shapefile) -------------------
+#archivos.shp (shapefile) son el archivo principal que contienen las figuras
+#archivos.dbf (data base file) son los datos de cada figura
+#archivos.prj (projection) son como estan los mapas guardados/proyectados
+#archivos.shx son en general los metadatos
+#install.packages("chilemapas")
+#install.packages("rgdal")
 library(rgdal)
-library(sp)
-library(chilemapas)
+library(sp) # paquete clásico (spatial)
+library(chilemapas) # para ver lo que contiene busco en help(package=chilemapas )
 library(data.table)
 
 
 
 # 3.1 Shapefiles as in the `sp` package
+help(package='sp')
 View(ogrDrivers())
 
-comunas_rm<-readOGR("Class_04/ComunasR13/COMUNA_C17.shp")
-class(comunas_rm)
+comunas_rm<-readOGR("Class_04/ComunasR13/COMUNA_C17.shp") # readOGR es la función para cargar mapas
+class(comunas_rm) # objeto complejo. Mapa de tipo poligono.
+
+comunas_rm@proj4string # proyección de longitud-latitud de la RM y forma de medir elipsoide (GRS80)
 
 View(comunas_rm@data)
 plot(comunas_rm)
 
-coordinates(comunas_rm)
+coordinates(comunas_rm) # coordenadas de latitud y longitud. Muestran los centroides (punto del centro) de los poligonos (de cada comuna).
+
+centroids_rm<-SpatialPoints(coordinates(comunas_rm),proj4string = comunas_rm@proj4string) # se crea un shapefile de puntos en base a las coordenadas de la RM y a su proyección.
+plot(comunas_rm) 
+plot(centroids_rm,add=T,col='red',lty=1,pch=21,cex=0.1) # se le agregan al mapa de la RM los centroides
+lines(coordinates(comunas_rm),col='blue') # lineas que juntan los puntos en orden aleatorio
+# se van superponiendo cosas
 
 
-centroids_rm<-SpatialPoints(coordinates(comunas_rm),proj4string = comunas_rm@proj4string)
-plot(comunas_rm)
-plot(centroids_rm,add=T,col='red',lty=1,pch=21,cex=0.1)
-lines(coordinates(comunas_rm),col='blue')
+str(comunas_rm@data) # muestra los tipos de datos, etc.
 
-
-str(comunas_rm@data)
-
-# 3.2 Shapefiles as in the `sf` package
+# 3.2 Shapefiles as in the `sf`(simple features) package
+# paquete sf se creó en base al paquete chilemapas
 
 zonas_censo<-data.table(censo_2017_zonas,stringsAsFactors = F)
 
 poblacion_adulto_mayor_zonas<-zonas_censo[edad=="65 y mas",.(AdultosMayores=sum(poblacion)),by=.(geocodigo)]
 
-zonas_valparaiso<-mapa_zonas[mapa_zonas$codigo_region=="05",]
+zonas_valparaiso<-mapa_zonas[mapa_zonas$codigo_region=="05",] # mapa zonas censales de Valparaiso
 
-zonas_valparaiso<-merge(zonas_valparaiso,codigos_territoriales[,c("codigo_comuna","nombre_comuna")],by="codigo_comuna",all.x=TRUE,sort=F)
+zonas_valparaiso<-merge(zonas_valparaiso,codigos_territoriales[,c("codigo_comuna","nombre_comuna")],by="codigo_comuna",all.x=TRUE,sort=F) # le meto los geocodigos
 
-zonas_valparaiso<-zonas_valparaiso[zonas_valparaiso$codigo_comuna%in%c("05101","05109"),]
+zonas_valparaiso<-zonas_valparaiso[zonas_valparaiso$codigo_comuna%in%c("05101","05109"),] # selecciono 2 comunas 
 
-zonas_valparaiso<-merge(zonas_valparaiso,poblacion_adulto_mayor_zonas,by="geocodigo",all.x=TRUE,sort=F)
+zonas_valparaiso<-merge(zonas_valparaiso,poblacion_adulto_mayor_zonas,by="geocodigo",all.x=TRUE,sort=F) # agrego población de adultos mayores
 
 
 #plotting
 library(RColorBrewer)
-paleta <- rev(brewer.pal(n = 9,name = "Reds"))
+paleta <- rev(brewer.pal(n = 9,name = "Reds")) # defino paleta de colores roja
+
 
 
 ggplot(zonas_valparaiso) + 
-  geom_sf(aes(fill = AdultosMayores, geometry = geometry)) +
-  scale_fill_gradientn(colours = rev(paleta), name = "Poblacion\nadulto mayor") +
-  labs(title = "Poblacion de 65 años y más", subtitle = "Valparaíso y Viña del Mar") +
-  theme_minimal(base_size = 11)
+  geom_sf(aes(fill = AdultosMayores, geometry = geometry)) + # AdultosMayores mapeados por colores
+  scale_fill_gradientn(colours = rev(paleta), name = "Poblacion\nadulto mayor") + # le pongo color de paleta
+  labs(title = "Poblacion de 65 años y más", subtitle = "Valparaíso y Viña del Mar") + # le pongo titulos
+  theme_minimal(base_size = 11) # cambio tamaño de letra
 
 # creating a fake spatial distribution of adult population in space
 zonas_valparaiso2<-cbind(zonas_valparaiso[,c("geocodigo","codigo_comuna","codigo_provincia","codigo_region","geometry")],"AdultosMayores"=sample(zonas_valparaiso$AdultosMayores,size = length(zonas_valparaiso$AdultosMayores)))

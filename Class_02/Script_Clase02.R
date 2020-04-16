@@ -44,7 +44,7 @@ data("quakes") # promise
 d1<-data.frame(quakes)
 
 ls()
-l1<-list(A=A,years,tiktoc,m1) # las listas son el objeto más complejo de R. Se puede hacer una lista con cualquier cosa
+l1<-list(A=A,years=years,tiktoc=tiktoc,m1=m1) # las listas son el objeto más complejo de R. Se puede hacer una lista con cualquier cosa
 
 # Manipulación de Objetos
 ls()

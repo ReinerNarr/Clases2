@@ -68,7 +68,7 @@ Titanic[1,]  ## Arroja información sobre la primera fila
 Titanic[6:14,]  ## Arroja información sobre la fila 6 a 14
 Titanic[,4]  ## Arroja información sobre la cuarta columna
 Titanic[,2:8]  ## Arroja información sobre la columna 2 a 8
-Titanic[,.(Survived,Age)]  ## También se puede con nombres de variables. Así melo tira como columnas. 
+Titanic[,.(Survived,Age)]  ## También se puede con nombres de variables. Así me lo tira como columnas. 
 ```
 
 Ahora, aprendamos algunas estrategias de filtrado básico:

@@ -14,22 +14,10 @@ library(readxl)
 library(data.table) 
 
 casos<-data.table(read_excel("Class_02/2020-03-17-Casos-confirmados.xlsx",na = "—",trim_ws = TRUE,col_names = TRUE),stringsAsFactors = FALSE) # stringsAsFalse se recomienda poner en False
-
-library(data.table)
-
-casos<-data.table(read_excel("Class_02/2020-03-17-Casos-confirmados.xlsx",na = "—",trim_ws = TRUE,col_names = TRUE),stringsAsFactors = FALSE) # stringsAsFalse se recomienda poner en False
-
-casos[,table((Región))]
-casos[,.N,by=.(Región)]
-
 casos[,table((Región))]
 casos[,.N,by=.(Región)]
 
 casos<-casos[Región=="Metropolitana",] 
-
-saveRDS(casos,"Class_03/casosRM.rds") # para guardar la base de datos en la carpeta
-
-write.csv(casos,file = 'Class_03/CasosCovid_RM.csv',fileEncoding = 'UTF-8') # se recomienda escribir en el archivo csv, ya que es de los más extendidos
 
 saveRDS(casos,"Class_03/casosRM.rds") # para guardar la base de datos en la carpeta
 
@@ -61,14 +49,14 @@ labels(casosRM$Sexo)
 
 table(casosRM$Sexo)
 casosRM[,.N,by=.(Sexo)]
-casosRM[,.N,by=.(Sexo,`Centro de salud`)]
+casosRM[,.N,by=.(Sexo, `Centro de salud`)]
 
 #Collapsing by Centro de Salud  ()
 
 casosRM[,sum(`Casos confirmados`,na.rm = T),by=.(`Centro de salud`)] # esto no está correcto, ya que se suman los casos totales
 casosRM[,sum(`Casos confirmados`,na.rm = T),by=.(`Centro de salud`)][,V1/sum(V1)] # % de casos por centro de salud
 
-casosRM[,.N,by=.(`Centro de salud`)] # esto es mejor, porque no suma el total de casos, sino que ve los casos por centro de salud
+casosRM[,.N,by=.(`Centro de salud`)] # esto es mejor, porque no suma el total de casos, sino que ve casos por centro de salud
 casosRM[,.N,by=.(`Centro de salud`)][,N/sum(N)] # % de casos por centro de salud
 
 casosRM[,mean(Edad,na.rm = T),by=.(`Centro de salud`)]
@@ -83,17 +71,15 @@ A<-casosRM[,.(AvAge=mean(Edad,na.rm = T)),by=.(`Centro de salud`)] # media de ed
 dim(A)
 casosRM[,.N,by=.(`Centro de salud`)]
 
+B<-casosRM[,.(Total_centro=.N),by=.(`Centro de salud`)] 
 
-dim(A)
-casosRM[,.N,by=.(`Centro de salud`)]
+dim(B)
 
-B<-casosRM[,.(Total_centro=sum(`Casos confirmados`,na.rm = T)),by=.(`Centro de salud`)] # suma total, malo
-
-C<-casosRM[Sexo=="Femenino",.(Total_Centro_Mujeres=sum(`Casos confirmados`,na.rm = T)),by=.(`Centro de salud`)]
+C<-casosRM[Sexo=="Femenino",.(Total_Centro_Mujeres=.N),by=.(`Centro de salud`)]
 
 dim(C)
 
-D<-casosRM[Sexo=="Masculino",.(Total_Centro_Hombres=sum(`Casos confirmados`,na.rm = T)),by=.(`Centro de salud`)]
+D<-casosRM[Sexo=="Masculino",.(Total_Centro_Hombres=.N),by=.(`Centro de salud`)]
 
 dim(D)
 
@@ -110,7 +96,7 @@ ABCD[,porc_mujeres:=Total_Centro_Mujeres/Total_centro]
 
 # reshaping 
 
-E<-casosRM[,.(AvAge=mean(Edad,na.rm = T),`Casos confirmados`=sum(`Casos confirmados`,na.rm = T)),by=.(`Centro de salud`,Sexo)]
+E<-casosRM[,.(AvAge=mean(Edad,na.rm = T),`Casos confirmados`=.N),by=.(`Centro de salud`,Sexo)]
 
 G<-reshape(E,direction = 'wide',timevar = 'Sexo',v.names = c('AvAge','Casos confirmados'),idvar = 'Centro de salud') # función reshape para reorganizar los datos 
 
