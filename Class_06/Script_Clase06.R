@@ -26,18 +26,18 @@ plot(B, breaks = b_B$brks, key=NULL)
 #Covid
 library(data.table)
 
-archivos<-dir(path = "Class_06/producto2/")
-COVID<-fread(input =paste0("Class_06/producto2/",archivos[1]))
-names(COVID)[6]<-paste0("Confirmados_",substr(archivos[1],start = 1,stop = 10))
+archivos<-dir(path = "Class_06/producto2/") # quiero saber qué archivos hay en esa carpeta
+COVID<-fread(input =paste0("Class_06/producto2/",archivos[1])) # me lee el primer archivo
+names(COVID)[6]<-paste0("Confirmados_",substr(archivos[1],start = 1,stop = 10)) #substr agarra el nombre del archivo y lo corre para robarse la fecha y pegarsela a casos confirmados
 for(i in 2:length(archivos)){
-  aa<-fread(input =paste0("Class_06/producto2/",archivos[i]))
-  aa<-aa[,.(`Codigo comuna`,`Casos Confirmados`)]
+  aa<-fread(input =paste0("Class_06/producto2/",archivos[i])) # va leyendo archivos y guardandolos en aa uno por uno
+  aa<-aa[,.(`Codigo comuna`,`Casos Confirmados`)] # me quiero quedar solo con el codigo de la comuna y los casos confirmados
   names(aa)[2]<-paste0("Confirmados_",substr(archivos[i],start = 1,stop = 10))
   COVID<-merge(COVID,aa,by="Codigo comuna",all.x=T,sort=F)
 }
 View(COVID)
 
-COVID[is.na(`Confirmados_2020-03-30`),`Confirmados_2020-03-30`:=0]
+COVID[is.na(`Confirmados_2020-03-30`),`Confirmados_2020-03-30`:=0] # dejar los NA como 0
 
 library(ggplot2)
 ggplot(COVID,aes(x=`Confirmados_2020-03-30`,y=`Confirmados_2020-04-17`))+geom_point()+geom_smooth(method = lm)
@@ -57,11 +57,15 @@ comunas_rm<-mapa_comunas[mapa_comunas$codigo_region==13,]
 
 comunas_rm<-merge(x = comunas_rm,y = COVID[`Codigo region`==13,],by.x="codigo_comuna",by.y="Codigo comuna",all.x=TRUE,sort=F)
 
-comunas_rm<-as_Spatial(comunas_rm)
+comunas_rm <- st_as_sf(comunas_rm)
 
-library(spdep)
+class(comunas_rm)
 
-nbs<-poly2nb(comunas_rm,queen = T)
+comunas_rm<-as_Spatial(comunas_rm) # cambio el formato para hacer análisis espacial
+
+library(spdep) #spatial dependence
+
+nbs<-poly2nb(comunas_rm,queen = T) # desde un poligono genero a los vecinos según el criterio queen
 
 w_rm<-nb2listw(nbs,style = "W")
 
@@ -75,3 +79,7 @@ plot(comunas_rm$Confirmados_2020.04.17,sl)
 
 # Optional Reading
 # https://cran.r-project.org/web/packages/spdep/vignettes/nb.pdf
+
+install.packages('googleway')
+
+googleway::google_places()
