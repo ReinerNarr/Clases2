@@ -10,13 +10,15 @@
 
 
 # paquetes
+install.packages('satellite')
+install.packages('RStoolbox')
 packages<-c('satellite','raster','rgdal','leaflet','RColorBrewer','data.table','RStoolbox')
 sapply(packages,FUN = require,character.only=T)
-#install.packages('satellite')
-#install.packages('RStoolbox')
+
 
 #cargando datos
-path<- paste0(getwd(),"/Class_08/LC08_L1TP_001076_20180228_20180308_01_T1/")
+#path<- paste0(getwd(),"/Class_08/LC08_L1TP_001076_20180228_20180308_01_T1/")
+path <- '/Users/reinernarr/Desktop/BUSINESS ANALYTICS/SPATIAL-ANALYTICS/LC08_L1TP_001076_20180228_20180308_01_T1'
 files <- list.files(path,pattern=glob2rx("LC08*.TIF"), full.names = T)
 sat<-satellite(files)
 

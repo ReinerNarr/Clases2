@@ -22,21 +22,21 @@ vignette("selectorgadget")
   url<-'https://www.portalinmobiliario.com/arriendo/departamento/antofagasta-antofagasta?ca=3&ts=1&mn=1&or=&sf=1&sp=0&at=0&pg=1'  
 
   #extracting raw prices
-  list<-read_html(url)
-  prices<-html_nodes(list,".price__fraction")%>%html_text()
-  prices<-gsub(pattern ="." ,replacement = "",x = prices,fixed = T)
+  list<-read_html(url) # me lee todos los datos de la página web
+  prices<-html_nodes(list,".price__fraction")%>%html_text() # me muestra los precios de la página web
+  prices<-gsub(pattern ="." ,replacement = "",x = prices,fixed = T) # le saco los puntos al precio
   
 
 #extracting links to specific properties
 list<-read_html(url)%>%
-  html_nodes(".item__info") %>%
-  html_nodes(".stack_column_item")%>%
-  html_children()%>%
-  html_attr("href") %>%
-  as.data.frame(stringsAsFactors=FALSE) %>%
+  html_nodes(".item__info") %>% # me divide la info de la página en items (se puede ver con selectorgadget en el browser)
+  html_nodes(".stack_column_item")%>% # me lo subdivide 
+  html_children()%>% # me lo subdivide
+  html_attr("href") %>% # me muestra solo los links
+  as.data.frame(stringsAsFactors=FALSE) %>% # lo convierto en dataframe
   unique()
 
-list<-list[!is.na(list),]
+list<-list[!is.na(list),] # quito los N/A
 
 
 # Nivel de Scrape: Propiedad
@@ -58,7 +58,7 @@ precio <- urlprop %>%
     html_nodes(".specs-item") %>%
     html_text()%>%
     gsub(pattern="\\D+", replacement=" ")%>%
-    trimws(which = "both")
+    trimws(which = "both") # quita el espacio blanco alrededorde los números
   
   area_total<-as.numeric(area[1])
   area_util<-as.numeric(area[2])
@@ -99,17 +99,17 @@ precio <- urlprop %>%
   # doing a loop 
   
   #setting data storage
-  departamentos_arriendo<-NULL
+  departamentos_arriendo<-NULL # creo una base vacía para guardar cosas
   
-  #scraping departamentos # 25 paginas
-  for(j in 1:25){
+  #scraping departamentos # 8 paginas - la página muestra 50 resultados
+  for(j in 1:8){
     url<-paste0('https://www.portalinmobiliario.com/arriendo/departamento/antofagasta-antofagasta?ca=3&ts=1&mn=1&or=&sf=1&sp=0&at=0&pg=',j)  
     
     #extracting links of all pages
     list<-read_html(url)%>%
       html_nodes(".item__info") %>%
-      html_nodes(".stack_column_item")%>%
-      html_children()%>%
+      html_nodes(".stack_column_item") %>%
+      html_children() %>%
       html_attr("href") %>%
       as.data.frame(stringsAsFactors=FALSE) %>%
       unique()
