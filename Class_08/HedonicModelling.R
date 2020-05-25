@@ -9,12 +9,14 @@
 ######################################################
 
 # paquetes
+install.packages('McSpatial')
 packages<-c('McSpatial','sp','devtools','rgeos')
 sapply(packages,FUN = require,character.only=T)
 
 # Calculando distancias
 # Euclidianas
-coords@data$distEu_av_sat<-geoshape(longvar = coords@data$coords.2.,latvar = coords@data$coords.1.,pointfile = averdes)*0.621371
+install.packages("spatstat")
+coords@data$distEu_av_sat<-geoshape(longvar = coords@data$coords.2.,latvar = coords@data$coords.1.,pointfile = averdes)*0.621371 # la multiplicación es para pasarla de millas a km
 coords@data$distEu_av_prc<-geoshape(longvar = coords@data$coords.2.,latvar = coords@data$coords.1.,pointfile = prc_averdes)*0.621371
 
 #-------------------------------------
